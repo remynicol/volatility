@@ -62,12 +62,30 @@ static void member(tree& member, tree& type, unsigned int indentation)
         start_line(indentation);
 
 	tree real_type = type;
-	int is_ptr = 1;
+	int is_ptr = 0, is_array = 0;
+	int* tab_array = 0;
 
-	if (TREE_CODE(type) == POINTER_TYPE)
-		real_type = TREE_TYPE(type);
+	while (TREE_CODE(real_type) == POINTER_TYPE | TREE_CODE(real_type) == ARRAY_TYPE)
+	{
+		if (TREE_CODE(real_type) == POINTER_TYPE)
+			is_ptr++;
+		if (TREE_CODE(real_type) == ARRAY_TYPE)
+		{
+		/*	if (is_array == 0)
+				tab_array = (int*) malloc(sizeof(int));
+			else
+				tab_array = realloc(tab_array, sizeof(is_array) + sizeof(int));
+
+			tab_array[is_array] = tree_to_uhwi(TYPE_SIZE(real_type));
+			is_array++;*/
+		}
+		real_type = TREE_TYPE(real_type);
+	}
+
+	if (TREE_CODE(real_type) == ARRAY_TYPE)
+		real_type = TREE_TYPE(real_type);
 	else
-		is_ptr = 0;
+		is_array = 0;
 
         if (TREE_CODE(TYPE_NAME(real_type)) == IDENTIFIER_NODE)
                 printf("%s", IDENTIFIER_POINTER(TYPE_NAME(real_type)));
@@ -76,11 +94,16 @@ static void member(tree& member, tree& type, unsigned int indentation)
 	else
 		assert(0);
 
-	if (is_ptr)
+	for (; is_ptr > 0; is_ptr--)
 		printf("*");
 
 	if (DECL_NAME(member));
       		printf(" %s", IDENTIFIER_POINTER(DECL_NAME(member)));
+
+	for (int i = 0; i < is_array; i++)
+		printf("[%d]", tab_array[i]);
+
+//	free(tab_array);
 
 	if (DECL_BIT_FIELD_TYPE(member))
 	{
@@ -111,7 +134,7 @@ static unsigned long rewrite_structure(tree& decl, tree& type, unsigned int inde
         long cum_offset = 0;
 
         for (field = TYPE_FIELDS(type); field != 0; field = TREE_CHAIN(field)) {
-		debug_tree(field);
+		//debug_tree(field);
 
                 if (field == NULL_TREE || field == error_mark_node)
                         continue;
