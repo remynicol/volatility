@@ -56,6 +56,41 @@ static long padding(long size, unsigned int indentation)
 	return padded;
 }
 
+static void member(tree& member, tree& type, unsigned int indentation)
+{
+	assert(TREE_CODE(member) == TYPE_DECL | TREE_CODE(member) == FIELD_DECL);
+        start_line(indentation);
+
+	tree real_type = type;
+	int is_ptr = 1;
+
+	if (TREE_CODE(type) == POINTER_TYPE)
+		real_type = TREE_TYPE(type);
+	else
+		is_ptr = 0;
+
+        if (TREE_CODE(TYPE_NAME(real_type)) == IDENTIFIER_NODE)
+                printf("%s", IDENTIFIER_POINTER(TYPE_NAME(real_type)));
+        else if (TREE_CODE(TYPE_NAME(real_type)) == TYPE_DECL && DECL_NAME(TYPE_NAME(real_type)))
+                printf("%s", IDENTIFIER_POINTER(DECL_NAME(TYPE_NAME(real_type))));
+	else
+		assert(0);
+
+	if (is_ptr)
+		printf("*");
+
+	if (DECL_NAME(member));
+      		printf(" %s", IDENTIFIER_POINTER(DECL_NAME(member)));
+
+	if (DECL_BIT_FIELD_TYPE(member))
+	{
+		printf(" : %lu", tree_to_uhwi(DECL_SIZE(member)));
+	}
+
+	printf(";\n");
+
+}
+
 static unsigned long rewrite_structure(tree& decl, tree& type, unsigned int indentation)
 {
 	start_line(indentation);
@@ -79,7 +114,7 @@ static unsigned long rewrite_structure(tree& decl, tree& type, unsigned int inde
                 if (field == NULL_TREE || field == error_mark_node)
                         continue;
 
-               	unsigned long msize = tree_to_uhwi(DECL_SIZE(field));
+               	unsigned long msize = tree_to_uhwi(TYPE_SIZE(TREE_TYPE(field)));
 		if (TREE_CODE(type) != UNION_TYPE)
 		{
 			long offset = int_bit_position(field);
@@ -91,7 +126,11 @@ static unsigned long rewrite_structure(tree& decl, tree& type, unsigned int inde
 		else if (msize > cum_offset)
 			cum_offset = msize;
 
-                tree mtype = TREE_TYPE(field);
+                tree mtype;
+		if (DECL_BIT_FIELD_TYPE(field))
+			mtype = DECL_BIT_FIELD_TYPE(field);
+		else
+			mtype = TREE_TYPE(field);
 
                 if ((TREE_CODE(mtype) == RECORD_TYPE | TREE_CODE(mtype) == UNION_TYPE) & !IS_ORIG_TYPE_NAME(mtype))
                 {
@@ -100,19 +139,7 @@ static unsigned long rewrite_structure(tree& decl, tree& type, unsigned int inde
                         continue;
                 }
 
-                assert(TREE_CODE(field) == TYPE_DECL | TREE_CODE(field) == FIELD_DECL);
-
-		start_line(indentation + 2);
-                if (TREE_CODE(TYPE_NAME(mtype)) == IDENTIFIER_NODE)
-                        printf("%s", IDENTIFIER_POINTER(TYPE_NAME(mtype)));
-                else if (TREE_CODE(TYPE_NAME(mtype)) == TYPE_DECL && DECL_NAME(TYPE_NAME(mtype)))
-                        printf("%s", IDENTIFIER_POINTER(DECL_NAME(TYPE_NAME(mtype))));
-		else
-			assert(0);
-
-//		if (DECL_NAME(field));
-  //             		printf(" %s", IDENTIFIER_POINTER(DECL_NAME(field)));
-		printf(";\n");
+		member(field, mtype, indentation + 2);
         }
 
 	unsigned long size = tree_to_uhwi(DECL_SIZE(decl));
