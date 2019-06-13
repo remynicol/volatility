@@ -13,7 +13,7 @@ dwarf: module.c gcc-plugins/debug-randstruct.so
 	dwarfdump -di module.ko > module.dwarf
 	$(MAKE) -C $(KDIR)/lib/modules/$(KVER)/build M="$(PWD)" clean
 
-gcc-plugins/debug-randstruct.so:
+gcc-plugins/debug-randstruct.so: gcc-plugins/debug-randstruct.cpp
 	$(MAKE) -C gcc-plugins debug-randstruct.so
 
 clean:

@@ -1,6 +1,6 @@
 all: debug-randstruct.so check
 
-debug-randstruct.so: debug-randstruct.c
+debug-randstruct.so: debug-randstruct.cpp
 	$(CXX) -I`g++ -print-file-name=plugin`/include -fPIC -shared -o $@ $<
 
 check: debug-randstruct.so
