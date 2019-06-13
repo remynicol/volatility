@@ -111,10 +111,21 @@ static unsigned long rewrite_structure(tree& decl, tree& type, unsigned int inde
         long cum_offset = 0;
 
         for (field = TYPE_FIELDS(type); field != 0; field = TREE_CHAIN(field)) {
+		debug_tree(field);
+
                 if (field == NULL_TREE || field == error_mark_node)
                         continue;
 
-               	unsigned long msize = tree_to_uhwi(TYPE_SIZE(TREE_TYPE(field)));
+                tree mtype;
+		if (DECL_BIT_FIELD_TYPE(field))
+			mtype = DECL_BIT_FIELD_TYPE(field);
+		else
+			mtype = TREE_TYPE(field);
+
+		if (TREE_CODE(mtype) != RECORD_TYPE & TREE_CODE(mtype) != UNION_TYPE & !DECL_NAME(field))
+			continue;
+
+               	unsigned long msize = tree_to_uhwi(DECL_SIZE(field));
 		if (TREE_CODE(type) != UNION_TYPE)
 		{
 			long offset = int_bit_position(field);
@@ -125,12 +136,6 @@ static unsigned long rewrite_structure(tree& decl, tree& type, unsigned int inde
 		}
 		else if (msize > cum_offset)
 			cum_offset = msize;
-
-                tree mtype;
-		if (DECL_BIT_FIELD_TYPE(field))
-			mtype = DECL_BIT_FIELD_TYPE(field);
-		else
-			mtype = TREE_TYPE(field);
 
                 if ((TREE_CODE(mtype) == RECORD_TYPE | TREE_CODE(mtype) == UNION_TYPE) & !IS_ORIG_TYPE_NAME(mtype))
                 {
